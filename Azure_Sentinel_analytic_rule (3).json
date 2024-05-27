@@ -1,0 +1,67 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/677644d0-3e4c-4960-95a5-4e9358ad205e')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/677644d0-3e4c-4960-95a5-4e9358ad205e')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "6DG - Detect when SyslogSource stops sending logs",
+                "description": "Identifies when Syslog Source stops sending logs into Sentinel\n\nThe rule runs every 90 minute to indentify syslog devices that have not submitted a new log into the system. It compares to all devices that have been seen sending syslog data in the past 24 hours. ",
+                "severity": "High",
+                "enabled": true,
+                "query": "let baseline_ago = 24h;\r\nlet flatline_threshold = 90m; // adjust this as a threshold\r\nSyslog\r\n| where TimeGenerated > ago(baseline_ago)\r\n| summarize arg_max(TimeGenerated, * ) by Computer\r\n| extend LastLog = TimeGenerated\r\n| project LastLog, Computer\r\n// if our latest timestamp is less than the threshold\r\n| extend Flatlined=iff(LastLog < ago(flatline_threshold), true, false)\r\n| where Flatlined",
+                "queryFrequency": "PT1H30M",
+                "queryPeriod": "P1D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "DefenseEvasion",
+                    "Impact"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "HostName",
+                                "columnName": "Computer"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}

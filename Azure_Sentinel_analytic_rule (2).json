@@ -1,0 +1,63 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/55d6f58d-d9ff-47da-8564-e7a85bd0ec16')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/55d6f58d-d9ff-47da-8564-e7a85bd0ec16')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-11-01-preview",
+            "properties": {
+                "displayName": "Sophos Central Endpoint Alerts - High",
+                "description": "Identify Suspicious Endpoint activity",
+                "severity": "High",
+                "enabled": true,
+                "query": "SophosEP_CL\n| where type_s has \"Endpoint\"\n| where isnotempty(source_info_ip_s)\n| where datastream_s == \"alert\"\n| where isnotempty(description_s)\n| where isnotempty(data_endpoint_type_s)\n| where severity_s has \"high\"\n| project-away\n    SourceSystem,\n    event_service_event_id_g,\n    data_created_at_d,\n    data_endpoint_id_g,\n    data_endpoint_java_id_g,\n    data_event_service_id_g,\n    data_inserted_at_d,\n    customer_id_g,\n    id_g\n",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "P1D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "CommandAndControl",
+                    "DefenseEvasion",
+                    "Discovery",
+                    "Execution",
+                    "Exfiltration",
+                    "Impact",
+                    "LateralMovement",
+                    "Persistence",
+                    "PrivilegeEscalation"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": null,
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

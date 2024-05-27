@@ -1,0 +1,67 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/502d23f2-6d85-4ca4-9dc8-40689703b66d')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/502d23f2-6d85-4ca4-9dc8-40689703b66d')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2022-09-01-preview",
+            "properties": {
+                "displayName": "6DG - Detect When Syslog Agent Stops sending HeartBeat",
+                "description": "This detection will go over the heartbeats received from the agents of Syslog Forwarder Machine over the last 10 minutes and will create alerts if the last heartbeats were received an hour ago.",
+                "severity": "High",
+                "enabled": true,
+                "query": "let current = now();\nlet ostype = 'Linux';\nlet computername = '';\nlet environment = 'Azure';\nlet threshold = 600;\nHeartbeat\n//| where TimeGenerated >= ago(1h)\n| where OSType contains \"Linux\"\n| where ComputerEnvironment has_any (\"Azure\", \"non-Azure\")\n| project Computer, TimeGenerated, current\n| order by TimeGenerated desc\n| project nminus = prev(TimeGenerated), current, Computer\n| where isnotempty(nminus)\n| extend ['LastHeartbeat (in seconds)'] = datetime_diff('second', current, nminus)\n| summarize arg_max(nminus, *) by Computer\n| where ['LastHeartbeat (in seconds)'] >= threshold\n| project Computer, QueryTime = current, LastTimeStamp = nminus, ['LastHeartbeat (in seconds)']\n",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT12H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "DefenseEvasion",
+                    "Impact"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "HostName",
+                                "columnName": "Computer"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}
